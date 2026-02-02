@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Will you be my Valentine?</title>
+
+  <!-- Google fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg1:#fff0f6;
+      --bg2:#ffeef6;
+      --accent:#ff5c8a;
+      --accent2:#ff9fc1;
+      --card:#ffffffcc;
+      --shadow: 0 8px 30px rgba(0,0,0,0.12);
+      --glass: rgba(255,255,255,0.55);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(circle at 10% 10%, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+      color:#442;
+      -webkit-font-smoothing:antialiased;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    /* floating hearts canvas behind content */
+    .scene{
+      position:relative;
+      width:100%;
+      max-width:960px;
+      min-height:520px;
+      border-radius:18px;
+      padding:36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.35));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px) saturate(110%);
+      overflow:hidden;
+    }
+
+    header{
+      position:absolute;
+      top:18px;
+      left:20px;
+      font-family: "Dancing Script", cursive;
+      font-size:20px;
+      color:var(--accent);
+      letter-spacing:0.6px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    header .peach{
+      width:36px;height:36px;border-radius:50%;
+      background: linear-gradient(135deg,#ffd4d9,#ffb6cc);
+      display:grid;place-items:center;font-size:20px;
+      transform: rotate(-8deg);
+      box-shadow: 0 4px 10px rgba(255,92,138,0.18);
+    }
+
+    .card{
+      width:100%;
+      max-width:720px;
+      padding:36px;
+      background:var(--card);
+      border-radius:14px;
+      text-align:center;
+      box-shadow:0 10px 40px rgba(0,0,0,0.06);
+      position:relative;
+      z-index:5;
+    }
+
+    .intro {
+      font-family: "Dancing Script", cursive;
+      font-size:36px;
+      margin:0 0 6px 0;
+      color:#b31a52;
+    }
+    .sub {
+      margin:0 0 18px 0;
+      font-size:16px;
+      color:#6b3b4b;
+      opacity:0.95;
+    }
+
+    .typed{
+      min-height:36px;
+      font-weight:600;
+      color:#422;
+      font-size:18px;
+      margin-bottom:20px;
+    }
+
+    .ask-btn{
+      appearance:none;
+      border:0;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      color:white;
+      padding:14px 28px;
+      font-size:18px;
+      border-radius:999px;
+      cursor:pointer;
+      box-shadow: 0 8px 24px rgba(255,92,138,0.2);
+      transform-style:preserve-3d;
+      transition:transform .15s ease, box-shadow .15s;
+    }
+    .ask-btn:active{ transform:translateY(2px) scale(.995) }
+    .small {
+      margin-top:12px;
+      font-size:13px;
+      color:#7d5564;
+    }
+
+    /* heart icon inside card */
+    .big-heart{
+      display:inline-block;
+      margin-top:20px;
+      width:86px;height:86px;
+      transform:translateY(0);
+      transition: transform .6s cubic-bezier(.2,.9,.3,1);
+    }
+
+    /* modal reveal */
+    .overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,0.25);
+      display:flex; align-items:center; justify-content:center; z-index:9999;
+      opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    .overlay.show{opacity:1; pointer-events:auto;}
+    .modal{
+      width:92%;
+      max-width:520px;
+      padding:28px;
+      background:linear-gradient(180deg,#fff,#fff7);
+      border-radius:14px;
+      text-align:center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      transform:translateY(20px);
+      transition: transform .35s, opacity .25s;
+    }
+    .overlay.show .modal{ transform:translateY(0); }
+
+    .modal h2{
+      font-family: "Dancing Script", cursive;
+      font-size:34px;
+      margin:4px 0 6px 0;
+      color:#ff3b7a;
+    }
+    .modal p{ margin:0 0 12px 0; color:#5a3b46; }
+
+    /* little floating hearts created by JS */
+    .floating-heart{
+      position:absolute;
+      width:28px; height:28px;
+      transform-origin:center;
+      pointer-events:none;
+      z-index:2;
+      will-change: transform, opacity;
+    }
+
+    /* small responsive tweaks */
+    @media (max-width:520px){
+      .intro{ font-size:28px }
+      .card{ padding:20px }
+      .ask-btn{ width:100% }
+    }
+
+    /* confetti canvas styles */
+    canvas.confetti{
+      position:fixed; inset:0; z-index:9998; pointer-events:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-live="polite">
+    <header>
+      <div class="bear">🐻</div>
+      <div>To my bear</div>
+    </header>
+
+    <div class="card" role="region" aria-label="Valentine card">
+      <div class="intro">Will you be my Valentine?</div>
+      <div class="sub">A silly page I made just for you hehe 💌</div>
+
+      <div class="typed" id="typed">Loading...</div>
+
+      <button id="askBtn" class="ask-btn" aria-label="Ask to be my valentine">Ask now</button>
+
+      <div class="small">Ps: You're my baby and not a dragon.</div>
+
+      <div style="margin-top:12px;">
+        <!-- decorative heart svg -->
+        <svg class="big-heart" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 21s-8-5.35-8-10.2S7 3 12 7.2 20 6.8 20 10.8 12 21 12 21z" fill="#ff6a94" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reveal modal -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" id="modal">
+      <h2 id="modalTitle">❤</h2>
+      <p id="modalMsg">...</p>
+      <button id="closeBtn" class="ask-btn" style="background:linear-gradient(90deg,#ffd2e2,#ffbcd3); margin-top:18px;">Close</button>
+    </div>
+  </div>
+
+  <canvas class="confetti" id="confetti"></canvas>
+
+<script>
+/* ======= Customize these values =======
+  Change boyfriendName and secretMessage as you like.
+*/
+const boyfriendName = "Isaac"; // <-- replace with his name, eg "David"
+const secretMessage = " Will you be my valentine 💕"; // <-- your message shown after the reveal
+const typedLines = [
+  `Hey ${Bear} 💖`,
+  "I was thinking about you",
+  "So I made you this silly page.",
+  "Will you be my Valentine?"
+];
+/* ===================================== */
+
+const typedEl = document.getElementById('typed');
+const askBtn = document.getElementById('askBtn');
+const overlay = document.getElementById('overlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalMsg = document.getElementById('modalMsg');
+const closeBtn = document.getElementById('closeBtn');
+const confettiCanvas = document.getElementById('confetti');
+
+let typingSpeed = 36; // ms per char
+
+// Simple typed-lines effect
+async function typeLines(lines){
+  typedEl.textContent = "";
+  for (let i=0;i<lines.length;i++){
+    await typeText(lines[i]);
+    if (i < lines.length-1){
+      await delay(600);
+      typedEl.textContent += "\n";
+    }
+  }
+}
+function typeText(text){
+  return new Promise(resolve=>{
+    let i=0;
+    const step = ()=>{
+      typedEl.textContent = text.slice(0,i);
+      i++;
+      if (i <= text.length){
+        setTimeout(step, typingSpeed);
+      } else {
+        resolve();
+      }
+    };
+    step();
+  });
+}
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// floating hearts generator (decorative)
+function spawnFloatingHeart(){
+  const heart = document.createElement('div');
+  heart.className = 'floating-heart';
+  heart.style.left = (20 + Math.random()*60) + '%';
+  heart.style.bottom = '-40px';
+  heart.style.opacity = (0.6 + Math.random()*0.4);
+  heart.style.transform = `scale(${0.7 + Math.random()*0.9}) rotate(${Math.random()*40 - 20}deg)`;
+  heart.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+    <path d="M12 21s-8-5.35-8-10.2S7 3 12 7.2 20 6.8 20 10.8 12 21 12 21z" fill="#ff6a94"/>
+  </svg>`;
+  document.body.appendChild(heart);
+
+  // animate via JS for varying durations
+  const duration = 4500 + Math.random()*4800;
+  const start = performance.now();
+  function animate(t){
+    const elapsed = t - start;
+    const p = elapsed / duration;
+    heart.style.bottom = (-40 + p * (window.innerHeight + 120)) + 'px';
+    heart.style.left = (parseFloat(heart.style.left) + Math.sin(p*6+Math.random())*0.2) + '%';
+    heart.style.opacity = String(Math.max(0, 1 - p));
+    if (p < 1) requestAnimationFrame(animate);
+    else heart.remove();
+  }
+  requestAnimationFrame(animate);
+}
+
+// spawn a few hearts in background continuously
+setInterval(spawnFloatingHeart, 700);
+for (let i=0;i<6;i++){ setTimeout(spawnFloatingHeart, i*180) }
+
+// typed intro kicks off
+typeLines(typedLines);
+
+// Ask button action: reveal modal + confetti + chime
+askBtn.addEventListener('click', async ()=>{
+  // create a small wobble on the heart svg
+  const heart = document.querySelector('.big-heart');
+  heart.style.transform = 'scale(1.15) rotate(-6deg)';
+  setTimeout(()=>heart.style.transform = '', 650);
+
+  // show modal with message
+  modalTitle.textContent = `For ${boyfriendName} ❤`;
+  modalMsg.textContent = secretMessage;
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+
+  // play chime
+  playChime();
+
+  // fire confetti for a short burst
+  runConfetti(520);
+});
+
+// close modal
+closeBtn.addEventListener('click', ()=>{
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden','true');
+});
+
+// accessibility: close on overlay click
+overlay.addEventListener('click', (e)=>{
+  if (e.target === overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); }
+});
+
+/* ======= simple confetti implementation (no external libs) ======= */
+const ctx = confettiCanvas.getContext && confettiCanvas.getContext('2d');
+let confettiPieces = [];
+function resizeCanvas(){
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function spawnConfetti(count){
+  confettiPieces = [];
+  for (let i=0;i<count;i++){
+    confettiPieces.push({
+      x: Math.random()*confettiCanvas.width,
+      y: Math.random()*-confettiCanvas.height,
+      w: 6 + Math.random()*10,
+      h: 8 + Math.random()*14,
+      vx: -1 + Math.random()*2,
+      vy: 2 + Math.random()*6,
+      rot: Math.random()*360,
+      vr: -6 + Math.random()*12,
+      color: `hsl(${Math.floor(Math.random()*50)+320}, 75%, ${45 + Math.random()*10}%)`
+    });
+  }
+}
+
+let confettiRunning = false;
+function runConfetti(count=80, ms=2500){
+  if (!ctx) return;
+  spawnConfetti(count);
+  confettiRunning = true;
+  const start = performance.now();
+  function frame(t){
+    ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+    const dt = t - start;
+    for (let p of confettiPieces){
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12; // gravity
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    }
+    // keep drawing while pieces still visible
+    if (t - start < ms || confettiPieces.some(p=>p.y < confettiCanvas.height+40)){
+      requestAnimationFrame(frame);
+    } else {
+      ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+      confettiRunning = false;
+      confettiPieces = [];
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ======= tiny WebAudio chime ======= */
+function playChime(){
+  try {
+    const A = window.AudioContext || window.webkitAudioContext;
+    const ac = new A();
+    const now = ac.currentTime;
+
+    const o1 = ac.createOscillator();
+    const o2 = ac.createOscillator();
+    const g = ac.createGain();
+
+    o1.frequency.value = 880; // A5
+    o2.frequency.value = 1320; // E6
+    o1.type = 'sine';
+    o2.type = 'triangle';
+
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.08, now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+    o1.connect(g);
+    o2.connect(g);
+    g.connect(ac.destination);
+
+    o1.start(now);
+    o2.start(now);
+    o1.stop(now + 1.2);
+    o2.stop(now + 1.2);
+  } catch(e) {
+    // Audio may be blocked by browser autoplay policy; ignore
+    console.warn("Audio not available:", e);
+  }
+}
+</script>
+</body>
+</html>
